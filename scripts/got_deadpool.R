@@ -81,7 +81,7 @@ character_outcomes_plot <- ggplot(character_outcomes_w,aes(x=reorder(variable,-C
        caption="Data from 35 Game of Thrones Battle of Winterfell Deadpool Predictions | Graph by August Warren") +
   coord_flip() 
 
-ggsave(plot = character_outcomes_plot, "C:\\users\\augus\\desktop\\character_outcomes.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = character_outcomes_plot, "character_outcomes.png", w = 10.67, h = 8,type = "cairo-png")
 
 ################################################################
 ##
@@ -137,7 +137,7 @@ fates_plots <- grid.arrange(outcomes_w_live_die_plot, dead_vs_actual_hist_plot, 
                             )
                           )
 
-ggsave(plot = fates_plots, "C:\\users\\augus\\desktop\\fates_plots.png", w = 12, h = 8,type = "cairo-png")
+ggsave(plot = fates_plots, "fates_plots.png", w = 12, h = 8,type = "cairo-png")
 
 ################################################################
 ##
@@ -189,5 +189,5 @@ demo_plot <- ggplot(combined_demos,aes(x=subgroup,y=percent,fill=outcome)) +
        fill="Prediction",
        caption="Data from 34 Game of Thrones Battle of Winterfell Deadpool Predictions | Graph by August Warren")
 
-ggsave(plot = demo_plot, "C:\\users\\augus\\desktop\\demo_plot.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = demo_plot, "demo_plot.png", w = 10.67, h = 8,type = "cairo-png")
 
