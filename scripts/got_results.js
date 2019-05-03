@@ -1,10 +1,69 @@
-d3.csv("C:/Users/augus/Desktop/outcome_table.csv", function(data){
+d3.csv("https://raw.githubusercontent.com/GWarrenn/got-deadpool/master/data/predictions.csv", function(data){
+
+	var updateTable = function(data,filter_param) {
+
+		document.getElementById("name").innerHTML = "Deadpool Predictions for: <b>" + filter_param + "</b>"
+
+		d3.select("#character-predictions-table tbody").remove();
+		d3.select("#character-predictions-table thead").remove();
+
+		var table = d3.select('#character-predictions-table')
+			.append('table')
+
+		var thead = table.append('thead')
+		var	tbody = table.append('tbody');
+
+		data = _.orderBy(data, ['variable'], ['asc']);
+
+		display_cols = ['Character','Prediction','Actual Fate','Ruling']
+		columns = ['variable','value','actual','outcome']
+
+		filtered_data = data.filter(function (a) { return a.sup_email == filter_param ; });		
+
+		//// append the header row
+		thead.append('tr')
+		  .selectAll('th')
+		  .data(display_cols).enter()
+		  .append('th')
+			.text(function (column) { return column; });
+
+		// create a row for each object in the data
+		var rows = tbody.selectAll('tr')
+		  .data(filtered_data)
+		  .enter()
+		  .append('tr');
+
+		rows.exit().remove();
+
+		color = d3.scaleOrdinal()
+		    .domain(["Incorrect","Correct"])
+		    .range(["#ff9197","#90f98e"]);
+
+		// create a cell in each row for each column
+		cells = rows.selectAll('td')
+			.data(function (row) {
+				return columns.map(function (column) {
+					return {column: column, value: row[column]};
+				});
+			})
+			.enter()
+			.append('td')
+			.style("background-color", function(d){ if(d.column == "outcome") return color(d.value);})
+			.text(function (d) { return d.value; });
+
+		cells.exit().remove();
+
+	}	
+
+	temp_filter = 'alexa~payne7015'
+
+	updateTable(data,temp_filter)
 
 	list = _.uniqBy(data, function (e) {
-		return e.email;
+		return e.sup_email;
 	});
 
-	var names = _.map(list, 'Name');
+	var names = _.map(list, 'sup_email').sort();
 
 	var dropDown = d3.select('#nameDropdown')
 
@@ -28,25 +87,35 @@ d3.csv("C:/Users/augus/Desktop/outcome_table.csv", function(data){
 
 	})
 
-	var updateTable = function(data,filter_param) {
+});		
 
-		document.getElementById("name").innerHTML = "Deadpool Predictions for: <b>" + filter_param + "</b>"
+d3.csv("https://raw.githubusercontent.com/GWarrenn/got-deadpool/master/data/outcome_table.csv", function(data){
 
-		d3.select("#character-predictions-table tbody").remove();
-		d3.select("#character-predictions-table thead").remove();
+		document.getElementById("header").innerHTML = "Deadpool Rankings"
 
-		var table = d3.select('#character-predictions-table')
+		var format = d3.format(",.2%")
+
+		// format the data
+		data.forEach(function(d) {
+			d.rank = +d.rank
+			d.Correct = +d.Correct
+			d.Correct_fmt = format(+d.Correct)
+			//d.Correct_fmt = +d.Correct_fmt
+		});
+
+		d3.select("#outcomes-table tbody").remove();
+		d3.select("#outcomes-table thead").remove();
+
+		var table = d3.select('#outcomes-table')
 			.append('table')
 
 		var thead = table.append('thead')
 		var	tbody = table.append('tbody');
 
-		data = _.orderBy(data, ['variable'], ['asc']);
+		data = _.orderBy(data, ['rank'], ['asc']);
 
-		display_cols = ['Character','Prediction','Actual Fate']
-		columns = ['variable','value','actual']
-
-		filtered_data = data.filter(function (a) { return a.email == filter_param ; });		
+		display_cols = ['Name','Percent Correct','Rank']
+		columns = ['sup_email','Correct_fmt','rank']
 
 		//// append the header row
 		thead.append('tr')
@@ -57,17 +126,25 @@ d3.csv("C:/Users/augus/Desktop/outcome_table.csv", function(data){
 
 		// create a row for each object in the data
 		var rows = tbody.selectAll('tr')
-		  .data(filtered_data)
+		  .data(data)
 		  .enter()
 		  .append('tr');
 
 		rows.exit().remove();
 
-		eliminated = filtered_data.filter(function (a) { return a.eliminated == "1" ; });		
+		min = _.minBy(data, function(o) {
+				return o.Correct_fmt;
+		})
 
-		var color = d3.scaleOrdinal()
-		    .domain(eliminated)
-		    .range("#FF0000", "#FF0000");
+		max = _.maxBy(data, function(o) {
+				return o.Correct_fmt;
+		})
+
+		color = d3.scaleLinear()
+		    .domain([90,45])
+		    .range(["#ff4500","#ffffff"]);
+
+		back_to_number = d3.format(".4r")
 
 		// create a cell in each row for each column
 		cells = rows.selectAll('td')
@@ -78,18 +155,11 @@ d3.csv("C:/Users/augus/Desktop/outcome_table.csv", function(data){
 			})
 			.enter()
 			.append('td')
-			//.style("background-color", function(d){ if(d.column == "pick_name") return color(d.value);})
+			.style("background-color", function(d){ if(d.column == "Correct_fmt") return color(+d.value.replace("%",""));})
 			.text(function (d) { return d.value; });
 
-		cells.exit().remove();
-
-	}	
-
-	temp_filter = 'davidmargolis@gmail.com'
-
-	updateTable(data,temp_filter)
+		cells.exit().remove();	
 
 });		
-
 
 
