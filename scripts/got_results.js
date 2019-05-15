@@ -91,7 +91,7 @@ function displayBattleResults(value){
 
 		}	
 
-		temp_filter = 'alexa~payne7015'
+		temp_filter = 'aamer~er'
 
 		updateTable(data,temp_filter)
 
