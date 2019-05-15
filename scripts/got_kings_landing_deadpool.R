@@ -10,6 +10,9 @@ library(curl)
 library(reshape2)
 library(ggbeeswarm)
 library(scales)
+library(viridis)
+library(gridExtra)
+library(grid)
 
 gs_ls()
 
@@ -100,13 +103,13 @@ character_outcomes_plot <- ggplot(character_outcomes_w,aes(x=reorder(variable,-C
   geom_text(aes(reorder(variable,-Correct),y=Correct,label=percent(round(Correct,2))),hjust=-.25) +
   theme(axis.title.y = element_blank(),legend.position = "bottom") +
   scale_fill_manual(values = c("#ff9197","#90f98e")) +
-  scale_y_continuous(labels = percent,expand = c(0,0),limits = c(0,1.05)) +
+  scale_y_continuous(labels = scales::percent,expand = c(0,0),limits = c(0,1.05)) +
   labs(y="% Fate Correctly Predicted",fill="Actual Fate",
        title="GoT Battle of Kings Landing Deadpool: % Correctly Predicted",
        caption="Data from 44 Game of Thrones Deadpool Predictions | Graph by August Warren") +
   coord_flip() 
 
-ggsave(plot = character_outcomes_plot, "got-deadpool\\images\\character_outcomes_westeros.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = character_outcomes_plot, "got-deadpool\\results\\character_outcomes_westeros.png", w = 10.67, h = 8,type = "cairo-png")
 
 ################################################################
 ##
@@ -125,8 +128,8 @@ outcomes_w_live_die_plot <- ggplot(outcomes_w_live_die,aes(x=Die,y=Correct)) +
   geom_beeswarm(size=4,cex=1,groupOnX=FALSE,alpha=.75,color="#DC143C") +
   geom_smooth(method = "lm",size=2) +
   geom_vline(xintercept = actual_dead) +
-  scale_x_continuous(labels=percent,limits = c(0,1)) +
-  scale_y_continuous(labels=percent,limits = c(0,1)) +
+  scale_x_continuous(labels=scales::percent,limits = c(0,1)) +
+  scale_y_continuous(labels=scales::percent,limits = c(0,1)) +
   geom_text(aes(.75,0,label = paste("R-Squared: ",as.character(round(summary(model)$r.squared,3))), hjust = 0)) +
   geom_text(aes(actual_dead,0,label = paste("Actual % Dead: ",as.character(percent(actual_dead))), hjust = 0)) +
   labs(y="Percent of Fates Correctly Predicted",
@@ -146,7 +149,7 @@ dead_vs_actual_hist_plot <- ggplot(outcomes_w_live_die,aes(x=Die)) +
   geom_vline(xintercept = mean(outcomes_w_live_die$Die)) +
   geom_text(aes(mean(outcomes_w_live_die$Die),11,label = paste("Avg. Predicted \n% Dead: ",as.character(percent(round(mean(outcomes_w_live_die$Die),2)))), hjust = 0)) +
   geom_text(aes(actual_dead,11,label = paste("Actual \n% Dead: ",as.character(percent(actual_dead))), hjust = 1)) +
-  scale_x_continuous(labels=percent) +
+  scale_x_continuous(labels=scales::percent) +
   labs(x="Percent of Character's Predicted to Die",
        y="Frequency")
        ##title="GoT Deadpool: % of Characters Predicted to Die vs. % Correctly Predicted",
@@ -162,7 +165,7 @@ fates_plots <- grid.arrange(outcomes_w_live_die_plot, dead_vs_actual_hist_plot, 
                             )
                           )
 
-ggsave(plot = fates_plots, "got-deadpool\\images\\fates_plots_westeros.png", w = 12, h = 8,type = "cairo-png")
+ggsave(plot = fates_plots, "got-deadpool\\results\\fates_plots_westeros.png", w = 12, h = 8,type = "cairo-png")
 
 ################################################################
 ##
@@ -214,5 +217,31 @@ demo_plot <- ggplot(combined_demos,aes(x=subgroup,y=percent,fill=outcome)) +
        fill="Prediction",
        caption="Data from 34 Game of Thrones Battle of Winterfell Deadpool Predictions | Graph by August Warren")
 
-ggsave(plot = demo_plot, "C:\\users\\augus\\desktop\\demo_plot.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = demo_plot, "got-deadpool\\results\\prev_week_comparison.png", w = 10.67, h = 8,type = "cairo-png")
 
+################################################################
+##
+## Bring in previous week's data to compare
+##
+################################################################
+
+prev_week <- read.csv("got-deadpool\\data\\outcome_table.csv")
+
+merged <- merge(export_outcomes,prev_week,by = "sup_email")
+
+merged$diff_ranking <- merged$rank.y - merged$rank.x
+
+prev_week_comparison <- ggplot(merged,aes(x=Correct.y,y=Correct.x)) +
+  geom_beeswarm(size=7,cex=1,groupOnX=FALSE,alpha=.75,aes(fill=diff_ranking),colour="black",pch=21) +
+  geom_abline() +
+  scale_x_continuous(limits = c(0,1),labels=scales::percent) +
+  scale_y_continuous(limits = c(0,1),labels=scales::percent) +
+  scale_fill_gradient2(high = "#00E51A", mid = "#FFFE2E", low = "#F5000F") +
+  theme(legend.position="bottom") +
+  labs(x="Battle of Winterfell % Correct",
+       y="Battle of Kings Landing % Correct",
+       fill="Change in Ranking",
+      title="GoT Deadpools % Correct: Winterfell vs. Kings Landing",
+      caption="Data from 23 Game of Thrones Battle of Winterfell & Kings Landing Deadpool Predictions | Graph by August Warren")
+
+ggsave(plot = prev_week_comparison, "got-deadpool\\results\\prev_week_comparison.png", w = 10.67, h = 8,type = "cairo-png")
