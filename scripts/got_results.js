@@ -3,7 +3,7 @@ var battleSelector = d3.select('#battle')
 
 battleSelector
   .selectAll("option")
-  .data(['Winterfell','Kings Landing'])
+  .data(['Kings Landing','Winterfell'])
   .enter()
   .append("option")
 	.attr("value", function (d) { return d; })
