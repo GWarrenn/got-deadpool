@@ -1,6 +1,6 @@
 ## Author: August Warren
-## Description: Analysis of DC Stop and Frisk Data
-## Date: 11/25/2018
+## Description: Game of Thrones Deadpool -- Kings Landing
+## Date: 5/14/2019
 ## Status: Published
 ## Specs: R version 3.3.2 (2016-10-31)
 
@@ -13,7 +13,7 @@ library(scales)
 
 gs_ls()
 
-got_doc <- gs_title("GoT Battle of Winterfell Deadpool (Responses)")
+got_doc <- gs_title("GoT Battle of Westeros Deadpool (Responses)")
 
 gs_ws_ls(got_doc)
 
@@ -28,9 +28,9 @@ colnames(deadpool_data) <- columns
 
 characters <- c("Email Address","Jon Snow","Sansa Stark","Arya Stark","Dany Targaryen","Tyrion Lannister","Jamie Lannister",
                 "Bran Stark","Ser Brienne of Tarth","Podrick Payne","Tormund Giantsbane","Davos Seaworth","Greyworm",
-                "Missandei","Sam Tarly","Gilly","Sandor Clegane -- The Hound" ,"Jorah Mormont","Lianna Mormont","Gendry",
-                "Lord Varys","Theon Greyjoy","Drogon","Rhaegal","Viserion","Eddison Tollett","Beric Dondarrion","Cersei Lannister",
-                "The girl who reminded us all of Shireen :(","Night King")
+                "Sam Tarly","Gilly","Sandor Clegane -- The Hound","Gendry",
+                "Lord Varys","Drogon","Cersei Lannister","Gregor Clegane -- The Mountain",
+                "Qyburn","Euron Greyjoy","Bronn","Yara Greyjoy")
 
 predictions <- deadpool_data %>%
   select(characters) %>%
@@ -43,27 +43,52 @@ predictions_long$value <- gsub(x=predictions_long$value,pattern = "(Live|Die).*"
 live_die_pct <- predictions_long %>%
   group_by(email,value) %>%
   summarise(n=n()) %>%
-  mutate(percent = n/29)
+  mutate(percent = n/(length(characters)-1))
 
 live_die_pct_w <- dcast(data = live_die_pct,formula = email ~ value,value.var = c("percent"))
 
-rip <- c("Jorah Mormont","Lianna Mormont","Theon Greyjoy","Viserion","Eddison Tollett","Night King","Beric Dondarrion")
+rip <- c("Qyburn","Euron Greyjoy","Lord Varys","Sandor Clegane -- The Hound","Cersei Lannister","Gregor Clegane -- The Mountain","Jamie Lannister")
 
 predictions_long <- predictions_long %>%
   mutate(actual = ifelse(variable %in% rip,"Die","Live"),
          outcome = ifelse(actual == value,"Correct","Incorrect"))
 
+predictions_long$sup_email <- predictions_long$email
+predictions_long$sup_email <- gsub(x = predictions_long$sup_email,pattern = "@.*",replacement = "")
+
+substr(predictions_long$sup_email,6,10) <- "~    "
+
+predictions_long$sup_email <- gsub(x = predictions_long$sup_email,pattern = "    ",replacement = "")
+
+export_predictions_long <- predictions_long %>%
+  select(variable,value,actual,outcome,sup_email)
+
+write.csv(export_predictions_long,file = "got-deadpool\\data\\predictions_westeros.csv")
+
 outcomes <- predictions_long %>%
   group_by(email,outcome) %>%
   summarise(n=n()) %>%
-  mutate(percent=n/29)
+  mutate(percent=n/(length(characters)-1))
 
 outcomes_w <- dcast(data = outcomes,formula = email ~ outcome,value.var = c("percent"))
+
+outcomes_w$sup_email <- outcomes_w$email
+outcomes_w$sup_email <- gsub(x = outcomes_w$sup_email,pattern = "@.*",replacement = "")
+
+substr(outcomes_w$sup_email,6,10) <- "~    "
+
+outcomes_w$sup_email <- gsub(x = outcomes_w$sup_email,pattern = "    ",replacement = "")
+
+export_outcomes <- outcomes_w %>%
+  select(sup_email,Correct) %>%
+  mutate(rank = rank(-Correct, ties.method ="min"))
+
+write.csv(export_outcomes,file = "got-deadpool\\data\\outcome_table_westoros.csv")
 
 character_outcomes <- predictions_long %>%
   group_by(variable,outcome) %>%
   summarise(n=n()) %>%
-  mutate(percent=n/34)
+  mutate(percent=n/44)
 
 character_outcomes_w <- dcast(data = character_outcomes,formula = variable ~ outcome,value.var = c("percent"))
 
@@ -77,11 +102,11 @@ character_outcomes_plot <- ggplot(character_outcomes_w,aes(x=reorder(variable,-C
   scale_fill_manual(values = c("#ff9197","#90f98e")) +
   scale_y_continuous(labels = percent,expand = c(0,0),limits = c(0,1.05)) +
   labs(y="% Fate Correctly Predicted",fill="Actual Fate",
-       title="GoT Deadpool: % Correctly Predicted",
-       caption="Data from 35 Game of Thrones Battle of Winterfell Deadpool Predictions | Graph by August Warren") +
+       title="GoT Battle of Kings Landing Deadpool: % Correctly Predicted",
+       caption="Data from 44 Game of Thrones Deadpool Predictions | Graph by August Warren") +
   coord_flip() 
 
-ggsave(plot = character_outcomes_plot, "character_outcomes.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = character_outcomes_plot, "got-deadpool\\images\\character_outcomes_westeros.png", w = 10.67, h = 8,type = "cairo-png")
 
 ################################################################
 ##
@@ -89,7 +114,7 @@ ggsave(plot = character_outcomes_plot, "character_outcomes.png", w = 10.67, h = 
 ##
 ################################################################
 
-actual_dead <- round(7/29,digits = 2)
+actual_dead <- round(length(rip)/(length(characters)-1),digits = 2)
 
 outcomes_w_live_die <- merge(outcomes_w,live_die_pct_w,by="email")
 
@@ -102,7 +127,7 @@ outcomes_w_live_die_plot <- ggplot(outcomes_w_live_die,aes(x=Die,y=Correct)) +
   geom_vline(xintercept = actual_dead) +
   scale_x_continuous(labels=percent,limits = c(0,1)) +
   scale_y_continuous(labels=percent,limits = c(0,1)) +
-  geom_text(aes(.85,0,label = paste("R-Squared: ",as.character(round(summary(model)$r.squared,3))), hjust = 0)) +
+  geom_text(aes(.75,0,label = paste("R-Squared: ",as.character(round(summary(model)$r.squared,3))), hjust = 0)) +
   geom_text(aes(actual_dead,0,label = paste("Actual % Dead: ",as.character(percent(actual_dead))), hjust = 0)) +
   labs(y="Percent of Fates Correctly Predicted",
        x="Percent of Characters Predicted to Die")
@@ -116,7 +141,7 @@ outcomes_w_live_die_plot <- ggplot(outcomes_w_live_die,aes(x=Die,y=Correct)) +
 ################################################################
 
 dead_vs_actual_hist_plot <- ggplot(outcomes_w_live_die,aes(x=Die)) +
-  geom_histogram(binwidth = .1,color="black",fill="#DC143C") +
+  geom_histogram(binwidth = .05,color="black",fill="#DC143C") +
   geom_vline(xintercept = actual_dead) +
   geom_vline(xintercept = mean(outcomes_w_live_die$Die)) +
   geom_text(aes(mean(outcomes_w_live_die$Die),11,label = paste("Avg. Predicted \n% Dead: ",as.character(percent(round(mean(outcomes_w_live_die$Die),2)))), hjust = 0)) +
@@ -128,16 +153,16 @@ dead_vs_actual_hist_plot <- ggplot(outcomes_w_live_die,aes(x=Die)) +
        ##caption="Data from Game of Thrones Battle of Winterfell Deadpool Predictions | Graph by August Warren")
 
 fates_plots <- grid.arrange(outcomes_w_live_die_plot, dead_vs_actual_hist_plot, nrow = 1,
-                            top="GoT Deadpool: % of Characters Predicted to Die vs. % Correctly Predicted",  
+                            top="GoT Battle of Kings Landing Deadpool: % of Characters Predicted to Die vs. % Correctly Predicted",  
                             bottom = textGrob(
-                              "Data from 34 Game of Thrones Battle of Winterfell Deadpool Predictions | Graph by August Warren",
+                              "Data from 44 Game of Thrones Deadpool Predictions | Graph by August Warren",
                               gp = gpar(fontface = 3, fontsize = 9),
                               hjust = 1,
                               x = 1
                             )
                           )
 
-ggsave(plot = fates_plots, "fates_plots.png", w = 12, h = 8,type = "cairo-png")
+ggsave(plot = fates_plots, "got-deadpool\\images\\fates_plots_westeros.png", w = 12, h = 8,type = "cairo-png")
 
 ################################################################
 ##
@@ -189,5 +214,5 @@ demo_plot <- ggplot(combined_demos,aes(x=subgroup,y=percent,fill=outcome)) +
        fill="Prediction",
        caption="Data from 34 Game of Thrones Battle of Winterfell Deadpool Predictions | Graph by August Warren")
 
-ggsave(plot = demo_plot, "demo_plot.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = demo_plot, "C:\\users\\augus\\desktop\\demo_plot.png", w = 10.67, h = 8,type = "cairo-png")
 
