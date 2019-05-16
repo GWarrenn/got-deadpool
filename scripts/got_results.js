@@ -134,7 +134,6 @@ function updateAllCharts(file_1,file_2){
 			updateTable(data,temp_filter)
 		}
 		else{
-			console.log(selectValue)
 			updateTable(data,selectValue)
 		}	
 
