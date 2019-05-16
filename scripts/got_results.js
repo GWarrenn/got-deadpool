@@ -1,6 +1,9 @@
 
 var battleSelector = d3.select('#battle')
 
+load = 0
+selectValue = ''
+
 battleSelector
   .selectAll("option")
   .data(['Kings Landing','Winterfell'])
@@ -17,6 +20,7 @@ battleSelector
 			.property('value');
 
 		displayBattleResults(selectValue);
+		load = 1
 
 	})
 
@@ -33,8 +37,9 @@ function displayBattleResults(value){
 		file_1 = "https://raw.githubusercontent.com/GWarrenn/got-deadpool/master/data/predictions_westeros.csv"
 		file_2 = "https://raw.githubusercontent.com/GWarrenn/got-deadpool/master/data/outcome_table_westoros.csv"
 	} 
+
 	updateAllCharts(file_1,file_2)
-	updateList(file_1)
+	//updateList(file_1)
 }
 
 function updateAllCharts(file_1,file_2){
@@ -117,16 +122,21 @@ function updateAllCharts(file_1,file_2){
 
 		dropDown.on('change',function() {
 
-			var selectValue = d3.select(this)
+			selectValue = d3.select(this)
 				.property('value');
 
 			updateTable(data,selectValue);
 
 		})
 
-		temp_filter = names[0]
-
-		updateTable(data,temp_filter)
+		if(load == 0){
+			temp_filter = names[0]
+			updateTable(data,temp_filter)
+		}
+		else{
+			console.log(selectValue)
+			updateTable(data,selectValue)
+		}	
 
 	});		
 
@@ -234,10 +244,5 @@ function updateList(file_1){
 			updateTable(data,selectValue);
 
 		})
-
-		temp_filter = names[0]
-
-		updateTable(data,temp_filter)
-
 	})
 }
