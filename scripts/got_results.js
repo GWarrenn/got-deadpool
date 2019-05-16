@@ -33,10 +33,15 @@ function displayBattleResults(value){
 		file_1 = "https://raw.githubusercontent.com/GWarrenn/got-deadpool/master/data/predictions_westeros.csv"
 		file_2 = "https://raw.githubusercontent.com/GWarrenn/got-deadpool/master/data/outcome_table_westoros.csv"
 	} 
+	updateAllCharts(file_1,file_2)
+	updateList(file_1)
+}
+
+function updateAllCharts(file_1,file_2){
 
 	d3.csv(file_1, function(data){
 
-		var updateTable = function(data,filter_param) {
+		updateTable = function(data,filter_param) {
 
 			document.getElementById("name").innerHTML = "Deadpool Predictions for: <b>" + filter_param + "</b>"
 
@@ -91,10 +96,6 @@ function displayBattleResults(value){
 
 		}	
 
-		temp_filter = 'aamer~er'
-
-		updateTable(data,temp_filter)
-
 		var list = _.uniqBy(data, function (e) {
 			return e.sup_email;
 		});
@@ -122,6 +123,10 @@ function displayBattleResults(value){
 			updateTable(data,selectValue);
 
 		})
+
+		temp_filter = names[0]
+
+		updateTable(data,temp_filter)
 
 	});		
 
@@ -197,6 +202,42 @@ function displayBattleResults(value){
 			cells.exit().remove();	
 
 	});		
+}
 
+function updateList(file_1){
+	d3.csv(file_1, function(data){
 
+		var list = _.uniqBy(data, function (e) {
+			return e.sup_email;
+		});
+
+		var names = _.map(list, 'sup_email').sort();
+
+		var dropDown = d3.select('#nameDropdown')
+
+		dropDown
+		  .selectAll("option")
+		  .data(names)
+		  .enter()
+		  .append("option")
+			.attr("value", function (d) { return d; })
+			.text(function (d) {
+				return d[0].toUpperCase() + d.slice(1,d.length);
+			})
+		  .on("change", onchange)
+
+		dropDown.on('change',function() {
+
+			var selectValue = d3.select(this)
+				.property('value');
+
+			updateTable(data,selectValue);
+
+		})
+
+		temp_filter = names[0]
+
+		updateTable(data,temp_filter)
+
+	})
 }
